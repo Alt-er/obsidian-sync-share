@@ -51,31 +51,31 @@ async function processTaskQueue() {
 }
 export { enqueueTask };
 
-// 示例使用
-function asyncTask(message: string): Promise<void> {
-    return new Promise<void>((resolve) => {
-        setTimeout(() => {
-            console.log(message);
-            resolve();
-        }, 1000);
-    });
-}
+// // 示例使用
+// function asyncTask(message: string): Promise<void> {
+//     return new Promise<void>((resolve) => {
+//         setTimeout(() => {
+//             console.log(message);
+//             resolve();
+//         }, 1000);
+//     });
+// }
 
-// 添加任务到任务队列并等待执行完成
-enqueueTask(async () => {
-    await asyncTask('Task 1');
-}).then(() => {
-    console.log('Task 1 completed.');
-});
+// // 添加任务到任务队列并等待执行完成
+// enqueueTask(async () => {
+//     await asyncTask('Task 1');
+// }).then(() => {
+//     console.log('Task 1 completed.');
+// });
 
-enqueueTask(async () => {
-    await asyncTask('Task 2');
-}).then(() => {
-    console.log('Task 2 completed.');
-});
+// enqueueTask(async () => {
+//     await asyncTask('Task 2');
+// }).then(() => {
+//     console.log('Task 2 completed.');
+// });
 
-enqueueTask(async () => {
-    await asyncTask('Task 3');
-}).then(() => {
-    console.log('Task 3 completed.');
-});
+// enqueueTask(async () => {
+//     await asyncTask('Task 3');
+// }).then(() => {
+//     console.log('Task 3 completed.');
+// });

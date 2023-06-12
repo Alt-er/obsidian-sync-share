@@ -1,6 +1,6 @@
 {
 	"id": "obsidian-sync-share",
-	"name": "Note Sync Share",
+	"name": "Notes Sync Share",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
 	"description": "Sync and share your notes.",

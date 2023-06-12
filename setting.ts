@@ -1,5 +1,6 @@
 import MyPlugin from "main";
 import { App, Notice, PluginSettingTab, Setting } from "obsidian";
+import { setRequestConcurrentNum } from "request";
 
 
 export const isValidServerUrl = (url: string, tips: boolean = false) => {
@@ -44,7 +45,7 @@ export default class SettingTab extends PluginSettingTab {
 
         containerEl.empty();
 
-        containerEl.createEl('h2', { text: 'Note sync share plugin.' });
+        containerEl.createEl('h2', { text: 'Notes sync share plugin.' });
 
         new Setting(containerEl)
             .setName('Server')
@@ -100,5 +101,41 @@ export default class SettingTab extends PluginSettingTab {
                         this.plugin.settings.token ? "relogin" : "login"
                     })
             )
+
+
+        new Setting(containerEl).setName("Auto-run")
+            .setDesc("Runs every once in a while and automatically synchronizes with the server")
+            .addDropdown(dropdown =>
+                dropdown.addOption("-1", "Unset")
+                    .addOption("1", "Every 1 minutes")
+                    .addOption("5", "Every 5 minutes")
+                    .addOption("10", "Every 10 minutes")
+                    .addOption("30", "Every 30 minutes")
+                    .setValue(this.plugin.settings.autoRunInterval + "")
+                    .onChange(async val => {
+                        this.plugin.settings.autoRunInterval = parseInt(val);
+                        await this.plugin.saveSettings();
+                        this.plugin.registerAutoRun();
+                    })
+            )
+
+
+        new Setting(containerEl).setName("Parallelism")
+            .setDesc("Parallel number of simultaneous downloads and uploads")
+            .addDropdown(dropdown =>
+                dropdown
+                    .addOption("1", "1")
+                    .addOption("5", "5")
+                    .addOption("10", "10(default)")
+                    .addOption("15", "15")
+                    .addOption("20", "20")
+                    .setValue(this.plugin.settings.parallelism + "")
+                    .onChange(async val => {
+                        this.plugin.settings.parallelism = parseInt(val);
+                        await this.plugin.saveSettings();
+                        setRequestConcurrentNum(this.plugin.settings.parallelism);
+                    })
+            )
     }
+
 }

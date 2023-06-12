@@ -6,3 +6,16 @@ available in the app when your plugin is enabled.
 If your plugin does not need CSS, delete this file.
 
 */
+
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  /* 选择图标元素 */
+.rotate-icon .lucide-rotate-ccw {
+    /* 添加动画效果 */
+    animation: spin 2s infinite linear;
+  }
+  

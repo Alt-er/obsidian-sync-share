@@ -1,10 +1,10 @@
-import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting, TAbstractFile, TFile, TFolder } from 'obsidian';
+import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting, TAbstractFile, TFile, TFolder, setIcon } from 'obsidian';
 import * as localforage from "localforage";
 import * as path from 'path';
 import { enqueueTask } from 'TaskQueue';
-import { request } from 'request';
+import { request, setRequestConcurrentNum } from 'request';
 import SettingTab, { isValidPassword, isValidServerUrl, isValidUsername } from 'setting';
-import { shareNote } from 'share';
+import { ShareHistoryStore, shareNotes } from 'share';
 export type LocalForage = typeof localforage;
 // Remember to rename these classes and interfaces!
 
@@ -15,6 +15,8 @@ interface MyPluginSettings {
 	password: string;
 	token: string;
 	vaultId: number;
+	autoRunInterval: number;
+	parallelism: number;
 }
 
 const DEFAULT_SETTINGS: MyPluginSettings = {
@@ -22,11 +24,11 @@ const DEFAULT_SETTINGS: MyPluginSettings = {
 	username: "",
 	password: "",
 	token: "",
-	vaultId: 0
+	vaultId: 0,
+	autoRunInterval: -1,
+	parallelism: 10
 
 }
-
-type UpdateInfo = [string, number, number];
 
 
 type DiffActionInfo = {
@@ -47,16 +49,20 @@ export default class MyPlugin extends Plugin {
 
 	db: LocalForage
 
+	shareHistoryStore: ShareHistoryStore
+
 	listenDeleteEvent: boolean = true
 
-	// SERVER_URL: string = "http://localhost:8080"
+	autoRunIntervalId: number
+
+	syncButtonElement: HTMLElement
 
 	getServerUrl() {
 		const url = this.settings.serverUrl;
 		if (!isValidServerUrl(url, true)) {
 			throw new Error("Invalid server URL. Please enter a valid URL.")
 		}
-		return url;
+		return url + "/api";
 	}
 
 	async deleteFileOrFolder(file: TAbstractFile) {
@@ -70,6 +76,23 @@ export default class MyPlugin extends Plugin {
 		}
 		this.listenDeleteEvent = true;
 	}
+
+	registerAutoRun() {
+		// 清理
+		if (this.autoRunIntervalId) {
+			window.clearInterval(this.autoRunIntervalId)
+		}
+
+		// 重新设置
+		if (this.settings.autoRunInterval > 0) {
+			this.autoRunIntervalId = this.registerInterval(window.setInterval(
+				() => {
+					this.syncButtonElement.click();
+				}
+				, this.settings.autoRunInterval * 60 * 1000));
+		}
+	}
+
 
 	login() {
 		if (isValidServerUrl(this.settings.serverUrl, true)
@@ -273,13 +296,13 @@ export default class MyPlugin extends Plugin {
 			deleteHistory.push([k, v + ""])
 		})
 
-		console.log({
-			fileInfos,
-			deleteHistory
-		})
+		// console.log({
+		// 	fileInfos,
+		// 	deleteHistory
+		// })
 
 
-		request(`${this.getServerUrl()}/sync/diff`, {
+		await request(`${this.getServerUrl()}/sync/diff`, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
@@ -292,11 +315,9 @@ export default class MyPlugin extends Plugin {
 			})
 		})
 			.then(response => response.json())
-			.then((data: Diff) => {
-				this.syncNotesByDiff(data);
-				// const { clientOnlyFiles, serverOnlyFiles, clientToUpdateFiles, serverToUpdateFiles } = data.data;
-				// this.syncNotesByDiff(filePathMap, clientOnlyFiles, serverOnlyFiles, clientToUpdateFiles, serverToUpdateFiles);
-			})
+			.then((data: Diff) =>
+				this.syncNotesByDiff(data)
+			)
 
 	}
 
@@ -307,10 +328,23 @@ export default class MyPlugin extends Plugin {
 			this.saveSettings();
 		}
 
+		// 删除记录
 		this.db = localforage.createInstance({
 			name: 'obsidian-sync-share-' + this.settings.vaultId,
 			storeName: 'delete_history',
 		})
+
+
+		// 分享记录
+		const shareHistoryDb = localforage.createInstance({
+			name: 'obsidian-sync-share-' + this.settings.vaultId,
+			storeName: 'share_history',
+		})
+
+		this.shareHistoryStore = new ShareHistoryStore(shareHistoryDb);
+
+		// 设置并发数
+		setRequestConcurrentNum(this.settings.parallelism);
 
 		this.app.vault.on("delete", async (fileOrFolder) => {
 			if (this.listenDeleteEvent) {
@@ -324,55 +358,75 @@ export default class MyPlugin extends Plugin {
 			this.db.setItem(oldPath, Date.now());
 		})
 
-		this.registerDomEvent
+
 		// This creates an icon in the left ribbon.
-		const ribbonIconEl = this.addRibbonIcon('dice', 'Sample Plugin', (evt: MouseEvent) => {
+		// refresh-ccw  rotate-ccw
+
+
+		const ribbonIconEl = this.addRibbonIcon('refresh-ccw', 'Notes Sync', async (evt: MouseEvent) => {
 			// Called when the user clicks the icon.
-			this.syncNotes();
+			if (ribbonIconEl.querySelector(".lucide-rotate-ccw")) {
+				new Notice("Synchronization in progress")
+				return;
+			}
+			const start = Date.now()
+			setIcon(ribbonIconEl, "rotate-ccw");
+			try {
+				await this.syncNotes();
+			} catch (e) {
+				console.log(e);
+			}
+			if (Date.now() - start < 1000) {
+				setTimeout(() => { setIcon(ribbonIconEl, "refresh-ccw") }, 1000)
+			} else {
+				setIcon(ribbonIconEl, "refresh-ccw");
+			}
 		});
 		// Perform additional things with the ribbon
-		ribbonIconEl.addClass('my-plugin-ribbon-class');
+		ribbonIconEl.addClass('rotate-icon');
+
+		this.syncButtonElement = ribbonIconEl;
 
 		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
-		const statusBarItemEl = this.addStatusBarItem();
-		statusBarItemEl.setText('Status Bar Text');
+		// const statusBarItemEl = this.addStatusBarItem();
+		// statusBarItemEl.setText('Status Bar Text');
 
 		// This adds a simple command that can be triggered anywhere
-		this.addCommand({
-			id: 'open-sample-modal-simple',
-			name: 'Open sample modal (simple)',
-			callback: () => {
-				new SampleModal(this.app).open();
-			}
-		});
+		// this.addCommand({
+		// 	id: 'open-sample-modal-simple',
+		// 	name: 'Open sample modal (simple)',
+		// 	callback: () => {
+		// 		new SampleModal(this.app).open();
+		// 	}
+		// });
 		// This adds an editor command that can perform some operation on the current editor instance
-		this.addCommand({
-			id: 'sample-editor-command',
-			name: 'Sample editor command',
-			editorCallback: (editor: Editor, view: MarkdownView) => {
-				console.log(editor.getSelection());
-				editor.replaceSelection('Sample Editor Command');
-			}
-		});
+		// this.addCommand({
+		// 	id: 'sample-editor-command',
+		// 	name: 'Sample editor command',
+		// 	editorCallback: (editor: Editor, view: MarkdownView) => {
+		// 		console.log(editor.getSelection());
+		// 		editor.replaceSelection('Sample Editor Command');
+		// 	}
+		// });
 		// This adds a complex command that can check whether the current state of the app allows execution of the command
-		this.addCommand({
-			id: 'open-sample-modal-complex',
-			name: 'Open sample modal (complex)',
-			checkCallback: (checking: boolean) => {
-				// Conditions to check
-				const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
-				if (markdownView) {
-					// If checking is true, we're simply "checking" if the command can be run.
-					// If checking is false, then we want to actually perform the operation.
-					if (!checking) {
-						new SampleModal(this.app).open();
-					}
+		// this.addCommand({
+		// 	id: 'open-sample-modal-complex',
+		// 	name: 'Open sample modal (complex)',
+		// 	checkCallback: (checking: boolean) => {
+		// 		// Conditions to check
+		// 		const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
+		// 		if (markdownView) {
+		// 			// If checking is true, we're simply "checking" if the command can be run.
+		// 			// If checking is false, then we want to actually perform the operation.
+		// 			if (!checking) {
+		// 				new SampleModal(this.app).open();
+		// 			}
 
-					// This command will only show up in Command Palette when the check function returns true
-					return true;
-				}
-			}
-		});
+		// 			// This command will only show up in Command Palette when the check function returns true
+		// 			return true;
+		// 		}
+		// 	}
+		// });
 
 		// This adds a settings tab so the user can configure various aspects of the plugin
 		this.addSettingTab(new SettingTab(this.app, this));
@@ -383,10 +437,17 @@ export default class MyPlugin extends Plugin {
 		// 	console.log('click', evt);
 		// });
 
-		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
-		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
 
-		this.registerFileMenuEvent()
+
+		this.registerFileMenuEvent();
+
+
+		// 注册自动运行
+		this.registerAutoRun();
+
+		// const appConfigStr = await app.vault.adapter.read(`${app.vault.configDir}/app.json`)
+		// const appConfig = JSON.parse(appConfigStr);
+
 	}
 
 
@@ -395,12 +456,41 @@ export default class MyPlugin extends Plugin {
 			this.app.workspace.on('file-menu', (menu, file) => {
 				if (file instanceof TFile && file.extension === "md") {
 					menu.addSeparator();
-					menu
-						.addItem(item => item
+
+					const shareLink = this.shareHistoryStore.getShareHistory(file.path);
+					if (shareLink) {
+						menu
+							.addItem(item => item.setTitle("Copy share URL")
+								.onClick(e => {
+									navigator.clipboard.writeText(shareLink);
+									new Notice("URL copied to clipboard.");
+								}))
+							.addItem(item => item.setTitle("Remove from web")
+								.onClick(e => {
+									request(`${this.getServerUrl()}/share/delete?shareLinkId=${shareLink.split("/").pop()}`, {
+										method: 'POST',
+										headers: {
+											'Content-Type': 'application/json',
+											'username': this.settings.username,
+											'token': this.settings.token
+										}
+									}).then(() => {
+										this.shareHistoryStore.removeShareHistory(file.path);
+									})
+
+								}))
+					} else {
+						menu.addItem(item => item
 							.setTitle("Share to web")
 							.setIcon('up-chevron-glyph')
-							.onClick(() => shareNote(this, file))
-						);
+							.onClick(async () => {
+								const url = await shareNotes(this, file);
+								if (url) {
+									this.shareHistoryStore.addShareHistory(file.path, url);
+								}
+							}))
+					}
+
 					menu.addSeparator();
 				}
 			})
