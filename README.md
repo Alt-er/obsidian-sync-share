@@ -11,20 +11,10 @@
 ## Getting Started
 
 1. Install the **Notes Sync Share** plugin in your Obsidian app.
-2. Configure the plugin settings with the URL and credentials of your private service.
-3. Choose the notes you want to sync or publish.
-4. Enjoy seamless synchronization and sharing of your notes.
-
-For detailed setup instructions and additional information, please refer to the [plugin source code](https://github.com/Alt-er/obsidian-sync-share).
-
-## Screenshots
-
-![xx](screenshots/02d372cc638a2d8ca4f4da5a69252df8.png)
-
-![xx](screenshots/78dcf10f1947be9b6fc2ad37b25cdc36.png)
-
-![xx](screenshots/60539da53b0384a830ff5ba649cf4e60.png)
-
+2. Deploy back-end services
+3. Configure the plugin settings with the URL and credentials of your private service.
+4. Choose the notes you want to sync or publish.
+5. Enjoy seamless synchronization and sharing of your notes.
 
 ## Back-end Service Deployment
 
@@ -74,6 +64,17 @@ This command allows you to specify additional parameters for configuring the ser
 please visit the [obsidian-sync-share-web](https://github.com/Alt-er/obsidian-sync-share-web). 
 
 please visit the [obsidian-sync-share-server](https://github.com/Alt-er/obsidian-sync-share-server). 
+
+
+## Screenshots
+
+![xx](screenshots/02d372cc638a2d8ca4f4da5a69252df8.png)
+
+![xx](screenshots/78dcf10f1947be9b6fc2ad37b25cdc36.png)
+
+![xx](screenshots/60539da53b0384a830ff5ba649cf4e60.png)
+
+
 
 ## Feedback and Contributions
 
