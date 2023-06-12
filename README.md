@@ -29,7 +29,7 @@ docker run -d \
 --name obsidian-sync-share-server \
 -p 80:8080 \
 -v "/root/obsidian-sync-share-server/user_store:/app/user_store" \
-obsidian-sync-share-server
+obsidian-sync-share-server:1.0.0
 ```
 
 This command will start a container in the background, mapping port 80 on the host to port 8080 in the container, and mounting the /root/obsidian-sync-share-server directory on the host to the /app/user_store directory in the container.
@@ -45,7 +45,7 @@ docker run -d \
 -e server.ssl.key-store-type=JKS \
 -e server.ssl.key-store=/app/cert.jks \
 -e server.ssl.key-store-password=xxxx \
-obsidian-sync-share-server 
+obsidian-sync-share-server:1.0.0
 ```
 
 This command allows you to specify additional parameters for configuring the server. Here's an explanation of each parameter:
