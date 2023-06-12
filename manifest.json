@@ -3,8 +3,8 @@
 	"name": "Notes Sync Share",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
-	"description": "Sync and share your notes.",
-	"author": "Alter",
+	"description": "Sync and share (publish) your notes in your own private service.",
+	"author": "Alt-er",
 	"authorUrl": "https://github.com/Alt-er",
 	"fundingUrl": "",
 	"isDesktopOnly": false
