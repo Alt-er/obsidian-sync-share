@@ -28,7 +28,7 @@ To quickly start the Obsidian Sync Share Server, execute the following command:
 docker run -d \
 --name obsidian-sync-share-server \
 -p 80:8080 \
--v "/root/obsidian-sync-share-server:/app/user_store" \
+-v "/root/obsidian-sync-share-server/user_store:/app/user_store" \
 obsidian-sync-share-server
 ```
 
