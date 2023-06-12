@@ -18,6 +18,12 @@
 
 ## Back-end Service Deployment
 
+### Try it out before you deploy it
+
+Try the author's back-end service: `https://share.cosy.plus`, configure this address into your plugin.
+
+Note: It is better to use your own deployed services for better privacy protection.
+
 ### Using docker
 
 #### Quick Start
