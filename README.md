@@ -57,8 +57,27 @@ This command allows you to specify additional parameters for configuring the ser
 - -e server.ssl.key-store=/app/cert.jks: Specifies the location of the SSL key store file within the container. Adjust if necessary.
 - -e server.ssl.key-store-password=xxxx: Sets the password for the SSL key store. Replace xxxx with the actual password.
 
+#### Try to access
 
+Use your server ip or domain name to access your service, the port is the listening port configured in docker earlier
 
+http://{your server ip}
+
+or
+
+https://{your server ip}
+
+#### Delete or rebuild
+```shell
+docker stop obsidian-sync-share-server
+docker rm obsidian-sync-share-server
+
+# rebuild
+# ...
+
+# view Log
+docker logs obsidian-sync-share-server
+```
 
 ### Source Code Deployment
 please visit the [obsidian-sync-share-web](https://github.com/Alt-er/obsidian-sync-share-web). 
@@ -73,6 +92,8 @@ please visit the [obsidian-sync-share-server](https://github.com/Alt-er/obsidian
 ![xx](screenshots/78dcf10f1947be9b6fc2ad37b25cdc36.png)
 
 ![xx](screenshots/60539da53b0384a830ff5ba649cf4e60.png)
+
+
 
 
 
