@@ -20,7 +20,7 @@ interface MyPluginSettings {
 }
 
 const DEFAULT_SETTINGS: MyPluginSettings = {
-	serverUrl: "",
+	serverUrl: "https://share.cosy.plus",
 	username: "",
 	password: "",
 	token: "",
