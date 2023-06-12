@@ -26,7 +26,54 @@ For detailed setup instructions and additional information, please refer to the 
 ![xx](screenshots/60539da53b0384a830ff5ba649cf4e60.png)
 
 
-# Service 
+## Back-end Service Deployment
+
+### Using docker
+
+#### Quick Start
+
+To quickly start the Obsidian Sync Share Server, execute the following command:
+
+```shell
+docker run -d \
+--name obsidian-sync-share-server \
+-p 80:8080 \
+-v "/root/obsidian-sync-share-server:/app/user_store" \
+obsidian-sync-share-server
+```
+
+This command will start a container in the background, mapping port 80 on the host to port 8080 in the container, and mounting the /root/obsidian-sync-share-server directory on the host to the /app/user_store directory in the container.
+
+#### Configure https
+
+```shell
+docker run -d \
+--name obsidian-sync-share-server \
+-p 443:8080 \
+-v "/root/obsidian-sync-share-server/user_store:/app/user_store" \
+-v "/root/obsidian-sync-share-server/share.cosy.plus.jks:/app/cert.jks" \
+-e server.ssl.key-store-type=JKS \
+-e server.ssl.key-store=/app/cert.jks \
+-e server.ssl.key-store-password=xxxx \
+obsidian-sync-share-server 
+```
+
+This command allows you to specify additional parameters for configuring the server. Here's an explanation of each parameter:
+
+- -p 443:8080: Maps port 443 on the host to port 8080 in the container. Modify the host port as needed.
+- -v "/root/obsidian-sync-share-server/user_store:/app/user_store": Mounts the /root/obsidian-sync-share-server/user_store directory on the host to the /app/user_store directory in the container. Adjust the host directory path as required.
+- -v "/root/obsidian-sync-share-server/share.cosy.plus.jks:/app/cert.jks": Mounts the share.cosy.plus.jks file on the host to the /app/cert.jks file in the container. Update the host file path accordingly.
+- -e server.ssl.key-store-type=JKS: Sets the SSL key store type to JKS. Modify this if you are using a different type.
+- -e server.ssl.key-store=/app/cert.jks: Specifies the location of the SSL key store file within the container. Adjust if necessary.
+- -e server.ssl.key-store-password=xxxx: Sets the password for the SSL key store. Replace xxxx with the actual password.
+
+
+
+
+### Source Code Deployment
+please visit the [obsidian-sync-share-web](https://github.com/Alt-er/obsidian-sync-share-web). 
+
+please visit the [obsidian-sync-share-server](https://github.com/Alt-er/obsidian-sync-share-server). 
 
 ## Feedback and Contributions
 
