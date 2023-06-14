@@ -5,7 +5,7 @@
 ## Features
 
 - **Sync**: Seamlessly sync your Obsidian notes to your private service. Your notes will always be up to date across multiple devices.
-- **Publish and Share**: Easily publish and share selected notes or entire folders to your private service. Share your knowledge with others or collaborate with teammates.
+- **Publish and Share**: Easily publish and share selected notes to your private service. Share your knowledge with others or collaborate with teammates.
 - **Privacy and Control**: Keep your notes secure and private. Your data is stored in your own self-hosted service, giving you full control over your information.
 
 ## Getting Started
@@ -38,7 +38,7 @@ docker run -d \
 alterzz/obsidian-sync-share-server
 ```
 
-This command will start a container in the background, mapping port 80 on the host to port 8080 in the container, and mounting the /root/obsidian-sync-share-server directory on the host to the /app/user_store directory in the container.
+This command will start a container in the background, mapping port 80 on the host to port 8080 in the container, and mounting the /root/obsidian-sync-share-server/user_store directory on the host to the /app/user_store directory in the container.
 
 #### Configure https
 
@@ -113,7 +113,7 @@ If you encounter any issues, have suggestions, or would like to contribute to th
 
 ## License
 
-This plugin is released under the [MIT License](https://github.com/Alt-er/obsidian-sync-share/LICENSE).
+This plugin is released under the [MIT License](https://github.com/Alt-er/obsidian-sync-share/blob/master/LICENSE).
 
 ---
 
