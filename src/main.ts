@@ -1,14 +1,13 @@
 import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting, TAbstractFile, TFile, TFolder, setIcon } from 'obsidian';
 import * as localforage from "localforage";
-import * as path from 'path';
-import { enqueueTask } from 'TaskQueue';
-import { request, setRequestConcurrentNum } from 'request';
-import SettingTab, { isValidPassword, isValidServerUrl, isValidUsername } from 'setting';
-import { ShareHistoryStore, shareNotes } from 'share';
+import { enqueueTask } from 'src/TaskQueue';
+import { request, setRequestConcurrentNum } from 'src/request';
+import SettingTab, { isValidPassword, isValidServerUrl, isValidUsername } from 'src/setting';
+import { ShareHistoryStore, shareNotes } from 'src/share';
 export type LocalForage = typeof localforage;
 // Remember to rename these classes and interfaces!
 
-interface MyPluginSettings {
+interface NoteSyncSharePluginSettings {
 
 	serverUrl: string;
 	username: string;
@@ -19,7 +18,7 @@ interface MyPluginSettings {
 	parallelism: number;
 }
 
-const DEFAULT_SETTINGS: MyPluginSettings = {
+const DEFAULT_SETTINGS: NoteSyncSharePluginSettings = {
 	serverUrl: "https://share.cosy.plus",
 	username: "",
 	password: "",
@@ -44,8 +43,8 @@ type Diff = {
 }
 
 
-export default class MyPlugin extends Plugin {
-	settings: MyPluginSettings;
+export default class NoteSyncSharePlugin extends Plugin {
+	settings: NoteSyncSharePluginSettings;
 
 	db: LocalForage
 
@@ -314,7 +313,9 @@ export default class MyPlugin extends Plugin {
 				deleteHistory
 			})
 		})
-			.then(response => response.json())
+			.then(response =>
+				response.json()
+			)
 			.then((data: Diff) =>
 				this.syncNotesByDiff(data)
 			)

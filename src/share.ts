@@ -1,9 +1,9 @@
-import MyPlugin from "main";
 import { Notice, Plugin, TFile } from "obsidian";
-import { request } from "request";
-import * as path from "path";
+import { request } from "src/request";
+import * as path from 'path-browserify'
+import NoteSyncSharePlugin from "./main";
 
-export const shareNotes = async (plugin: MyPlugin, file: TFile) => {
+export const shareNotes = async (plugin: NoteSyncSharePlugin, file: TFile) => {
 
     const { username, token } = plugin.settings;
     const serverUrl = plugin.getServerUrl();

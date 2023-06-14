@@ -1,6 +1,6 @@
 import MyPlugin from "main";
 import { App, Notice, PluginSettingTab, Setting } from "obsidian";
-import { setRequestConcurrentNum } from "request";
+import { setRequestConcurrentNum } from "src/request";
 
 
 export const isValidServerUrl = (url: string, tips: boolean = false) => {
@@ -45,7 +45,7 @@ export default class SettingTab extends PluginSettingTab {
 
         containerEl.empty();
 
-        containerEl.createEl('h2', { text: 'Notes sync share plugin.' });
+        // containerEl.createEl('h2', { text: 'Notes sync share plugin.' });
 
         new Setting(containerEl)
             .setName('Server')

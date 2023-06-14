@@ -1,4 +1,4 @@
-import { Notice } from "obsidian";
+import { Notice, RequestUrlResponsePromise, requestUrl } from "obsidian";
 
 // export async function request(input: RequestInfo | URL, init?: RequestInit | undefined) {
 //     return fetch(input, init)
@@ -17,6 +17,15 @@ import { Notice } from "obsidian";
 //         });
 // }
 
+
+type TransitResponse = {
+    /** @public */
+    arrayBuffer: () => Promise<ArrayBuffer>;
+    /** @public */
+    json: () => Promise<any>;
+    /** @public */
+    text: () => Promise<string>;
+}
 
 class ConcurrentFetch {
     private maxConcurrency: number;
@@ -41,8 +50,34 @@ class ConcurrentFetch {
         }
     }
 
-    async fetch(input: RequestInfo | URL, init?: RequestInit | undefined): Promise<Response> {
+    async fetch(input: RequestInfo | URL, init?: RequestInit | undefined): Promise<TransitResponse> {
         return new Promise((resolve, reject) => {
+            // const task = async () => {
+            //     try {
+            //         // const response = await fetch(input, init);
+
+            //         const url = input as string;
+            //         const method = init?.method;
+            //         const headers = init?.headers as Record<string, string>;
+            //         const body = init?.body as string | ArrayBuffer;
+            //         const response = await requestUrl({ url, method, headers, body });
+
+            //         const transitResponse: TransitResponse = {
+            //             text: async () => response.text,
+            //             json: async () => response.json,
+            //             arrayBuffer: async () => response.arrayBuffer,
+            //         }
+
+            //         if (response.status != 200) {
+            //             reject(transitResponse)
+            //         }
+            //         resolve(transitResponse);
+
+            //     } catch (error) {
+            //         reject(error);
+            //     }
+            // };
+
             const task = async () => {
                 try {
                     const response = await fetch(input, init);
