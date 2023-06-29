@@ -87,8 +87,8 @@ class ConcurrentFetch {
                         reject(response)
                     }
                 } catch (error) {
-                    new Notice(error.stack)
-                    // reject(error);
+                    // new Notice(error.stack)
+                    reject(error);
                 }
             };
 
