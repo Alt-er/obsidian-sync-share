@@ -230,7 +230,7 @@ export default class SettingTab extends PluginSettingTab {
                     })
             ).setClass("setting_equal_width_warpper");
 
-        new Setting(containerEl).setName("username")
+        new Setting(containerEl).setName("Username")
             .setDesc("Remote git repository username, Requires repository write access ")
             .addText(text =>
                 text
@@ -242,7 +242,7 @@ export default class SettingTab extends PluginSettingTab {
                     })
             ).setClass("setting_equal_width_warpper");
 
-        new Setting(containerEl).setName("accessToken")
+        new Setting(containerEl).setName("AccessToken")
             .setDesc("Remote git repository accessToken, Requires repository write access ")
             .addText(text =>
                 text
