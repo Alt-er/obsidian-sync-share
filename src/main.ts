@@ -3,11 +3,12 @@ import * as localforage from "localforage";
 import { enqueueTask } from 'src/TaskQueue';
 import { request, setRequestConcurrentNum } from 'src/request';
 import SettingTab, { isValidPassword, isValidServerUrl, isValidUsername } from 'src/setting';
-import { ShareHistoryStore, shareNotes } from 'src/share';
+import { ShareHistoryStore, ShareModal, shareNotes } from 'src/share';
+import { HistoryModal } from './history';
 export type LocalForage = typeof localforage;
 // Remember to rename these classes and interfaces!
 
-interface NoteSyncSharePluginSettings {
+export interface NoteSyncSharePluginSettings {
 
 	serverUrl: string;
 	username: string;
@@ -16,6 +17,11 @@ interface NoteSyncSharePluginSettings {
 	vaultId: number;
 	autoRunInterval: number;
 	parallelism: number;
+	syncToLocalGit: boolean;
+	maximumCommitFileSize: number;
+	remoteGitAddress: string;
+	remoteGitUsername: string;
+	remoteGitAccessToken: string;
 }
 
 const DEFAULT_SETTINGS: NoteSyncSharePluginSettings = {
@@ -25,8 +31,12 @@ const DEFAULT_SETTINGS: NoteSyncSharePluginSettings = {
 	token: "",
 	vaultId: 0,
 	autoRunInterval: -1,
-	parallelism: 10
-
+	parallelism: 10,
+	syncToLocalGit: false,
+	maximumCommitFileSize: 1,
+	remoteGitAddress: "",
+	remoteGitUsername: "",
+	remoteGitAccessToken: "",
 }
 
 
@@ -226,7 +236,7 @@ export default class NoteSyncSharePlugin extends Plugin {
 							}
 						} else {
 							const file = this.app.vault.getAbstractFileByPath(f);
-							const mtime = response.headers.get("mtime");
+							const mtime = response.headers.get("mtime") || "0";
 							if (!file) {
 								const arr = f.split("/");
 								const parentDir = arr.slice(0, arr.length - 1).join("/");
@@ -264,11 +274,9 @@ export default class NoteSyncSharePlugin extends Plugin {
 			},
 		}).then(response => response.text())
 			.then(data => {
+				new Notice("Synchronized notes completed");
 				console.log('unlock: ', data);
 			})
-
-
-		new Notice("Synchronized notes completed");
 
 	}
 
@@ -455,45 +463,56 @@ export default class NoteSyncSharePlugin extends Plugin {
 	registerFileMenuEvent() {
 		this.registerEvent(
 			this.app.workspace.on('file-menu', (menu, file) => {
-				if (file instanceof TFile && file.extension === "md") {
+				if (file instanceof TFile) {
 					menu.addSeparator();
+					if (file.extension === "md") {
+						const shareLink = this.shareHistoryStore.getShareHistory(file.path);
+						if (shareLink) {
+							menu
+								.addItem(item => item.setTitle("Copy share URL")
+									.onClick(e => {
+										navigator.clipboard.writeText(shareLink);
+										new Notice("URL copied to clipboard.");
+									}))
+								.addItem(item => item.setTitle("Remove from web")
+									.onClick(e => {
+										request(`${this.getServerUrl()}/share/delete?shareLinkId=${shareLink.split("/").pop()}`, {
+											method: 'POST',
+											headers: {
+												'Content-Type': 'application/json',
+												'username': this.settings.username,
+												'token': this.settings.token
+											}
+										}).then(() => {
+											this.shareHistoryStore.removeShareHistory(file.path);
+										})
 
-					const shareLink = this.shareHistoryStore.getShareHistory(file.path);
-					if (shareLink) {
-						menu
-							.addItem(item => item.setTitle("Copy share URL")
-								.onClick(e => {
-									navigator.clipboard.writeText(shareLink);
-									new Notice("URL copied to clipboard.");
-								}))
-							.addItem(item => item.setTitle("Remove from web")
-								.onClick(e => {
-									request(`${this.getServerUrl()}/share/delete?shareLinkId=${shareLink.split("/").pop()}`, {
-										method: 'POST',
-										headers: {
-											'Content-Type': 'application/json',
-											'username': this.settings.username,
-											'token': this.settings.token
-										}
-									}).then(() => {
-										this.shareHistoryStore.removeShareHistory(file.path);
-									})
+									}))
+						} else {
+							menu.addItem(item => item
+								.setTitle("Share to web")
+								.setIcon('up-chevron-glyph')
+								.onClick(async () => {
+									// const url = await shareNotes(this, file);
+									// if (url) {
+									// 	this.shareHistoryStore.addShareHistory(file.path, url);
+									// }
 
+
+									new ShareModal(this.app, this, file).open();
 								}))
-					} else {
-						menu.addItem(item => item
-							.setTitle("Share to web")
-							.setIcon('up-chevron-glyph')
-							.onClick(async () => {
-								const url = await shareNotes(this, file);
-								if (url) {
-									this.shareHistoryStore.addShareHistory(file.path, url);
-								}
-							}))
+						}
 					}
+					menu.addItem(item => item
+						.setTitle("Remote History")
+						.setIcon('up-chevron-glyph')
+						.onClick(async () => {
+							new HistoryModal(this.app, this, file).open();
+						}))
 
 					menu.addSeparator();
 				}
+
 			})
 		);
 	}
@@ -508,21 +527,5 @@ export default class NoteSyncSharePlugin extends Plugin {
 
 	async saveSettings() {
 		await this.saveData(this.settings);
-	}
-}
-
-class SampleModal extends Modal {
-	constructor(app: App) {
-		super(app);
-	}
-
-	onOpen() {
-		const { contentEl } = this;
-		contentEl.setText('Woah!');
-	}
-
-	onClose() {
-		const { contentEl } = this;
-		contentEl.empty();
 	}
 }

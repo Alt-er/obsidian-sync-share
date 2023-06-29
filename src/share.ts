@@ -1,9 +1,9 @@
-import { Notice, Plugin, TFile } from "obsidian";
+import { App, Modal, Notice, Platform, Plugin, Setting, TFile, getIcon } from "obsidian";
 import { request } from "src/request";
 import * as path from 'path-browserify'
 import NoteSyncSharePlugin from "./main";
 
-export const shareNotes = async (plugin: NoteSyncSharePlugin, file: TFile) => {
+export const shareNotes = async (plugin: NoteSyncSharePlugin, file: TFile, expirationDate: number) => {
 
     const { username, token } = plugin.settings;
     const serverUrl = plugin.getServerUrl();
@@ -13,6 +13,8 @@ export const shareNotes = async (plugin: NoteSyncSharePlugin, file: TFile) => {
         const formData = new FormData();
         formData.append('mainPath', file.path);
         formData.append('title', title);
+        formData.append('expirationDate', expirationDate + "");
+
         const fileData = await plugin.app.vault.readBinary(file);
         formData.append(file.path, new Blob([fileData]), file.name);
 
@@ -96,7 +98,7 @@ const findLinkedFiles = async (file: TFile, embeddedFiles: TFile[]) => {
     if (file.extension === "md") {
         const markdownContent = await file.vault.read(file);
         // 定义正则表达式匹配模式
-        const regex = /\[.*?\]\((.*?)\)/g;
+        let regex = /\[.*?\]\((.*)\)/g;
 
         let match;
         while ((match = regex.exec(markdownContent)) !== null) {
@@ -147,5 +149,152 @@ export class ShareHistoryStore {
 
     getShareHistory(path: string) {
         return this.shareHistoryInMemory.get(path);
+    }
+}
+
+
+
+
+export class ShareModal extends Modal {
+    plugin: NoteSyncSharePlugin;
+    file: TFile;
+    expirationType: "Unset" | "Minutes" | "Hours" | "Days"
+    expirationValue: number
+
+    constructor(app: App, plugin: NoteSyncSharePlugin, file: TFile) {
+        super(app);
+        this.plugin = plugin;
+        this.file = file;
+        this.expirationType = "Unset";
+        this.expirationValue = 0;
+    }
+
+    async getShareHistory(filePath: string) {
+        return await request(`${this.plugin.getServerUrl()}/share/shareHistory?path=${filePath}`, {
+            method: 'GET',
+            headers: {
+                'username': this.plugin.settings.username,
+                'token': this.plugin.settings.token
+            },
+        }).then(res => res.json());
+    }
+
+    async deleteShareHistory(shareLink: string) {
+        return await request(`${this.plugin.getServerUrl()}/share/delete?shareLinkId=${shareLink.split("/").pop()}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'username': this.plugin.settings.username,
+                'token': this.plugin.settings.token
+            }
+        })
+    }
+
+
+    async onOpen() {
+
+        const { contentEl } = this;
+
+        const title = contentEl.createDiv({ text: 'Share History' });
+        title.addClass("modal_title_warpper")
+
+        new Setting(contentEl)
+
+            .setName('Expiration date')
+            .setDesc('Set an expiration date, after which the notes will be blocked from access')
+            .addDropdown(dropdown =>
+                dropdown.addOption("Unset", "Unset")
+                    .addOption("Minutes", "Minutes")
+                    .addOption("Hours", "Hours")
+                    .addOption("Days", "Days")
+                    .setValue(this.expirationType)
+                    .onChange(async val => {
+                        this.expirationType = val as any;
+                    })
+            )
+            .addText(text => text
+                .setPlaceholder('Please enter a number')
+                .setValue(this.expirationValue + "")
+                .onChange(async (value) => {
+                    var regex = /^[1-9][0-9]*$/;
+                    let num = value;
+                    if (!regex.test(num)) {
+                        num = num.replace(/[^1-9]/g, '');
+                        text.setValue(num);
+                    }
+                    if (parseInt(num) > 10000) {
+                        num = "10000";
+                        text.setValue(num);
+                    }
+                    this.expirationValue = parseInt(num);
+                }))
+
+            .addButton(button =>
+                button.setButtonText("Share & Copy")
+                    .onClick(async e => {
+                        // 计算过期时间 默认0 未设置
+                        let expirationDate = 0;
+                        if (this.expirationType === "Minutes" && this.expirationValue > 0) {
+                            expirationDate = Date.now() + (1000 * 60 * this.expirationValue)
+                        } else if (this.expirationType === "Hours" && this.expirationValue > 0) {
+                            expirationDate = Date.now() + (1000 * 60 * 60 * this.expirationValue)
+                        } else if (this.expirationType === "Days" && this.expirationValue > 0) {
+                            expirationDate = Date.now() + (1000 * 60 * 60 * 24 * this.expirationValue);
+                        }
+                        await shareNotes(this.plugin, this.file, expirationDate);
+                        loadHistory();
+                    })
+            )
+
+        const div = contentEl.createDiv();
+        div.addClass("modal_content_warpper")
+        // 添加列表内容
+        const listEl = div.createEl('ul');
+
+        const loadHistory = async () => {
+            listEl.empty();
+
+            const shareHistory: { uuid: string, expirationDate: string }[] = await this.getShareHistory(this.file.path);
+
+            shareHistory.forEach(h => {
+                const listItem = listEl.createEl('li');
+                listItem.addClass("share_history_record_warpper");
+                const a = listItem.createEl("a");
+                a.textContent = `Expiration Date: ${h.expirationDate}`;
+                a.href = this.plugin.settings.serverUrl + h.uuid;
+                a.onclick = () => {
+                    navigator.clipboard.writeText(this.plugin.settings.serverUrl + h.uuid);
+                    new Notice("URL copied to clipboard.");
+                }
+
+                const trash = getIcon("trash-2");
+                const copy = getIcon("copy");
+
+                if (trash) {
+                    listItem.appendChild(trash);
+                    trash.onclick = async () => {
+                        await this.deleteShareHistory(h.uuid);
+                        loadHistory();
+                        new Notice("Share has been deleted");
+                    }
+                }
+
+                if (copy) {
+                    listItem.appendChild(copy);
+                    copy.onclick = () => {
+                        navigator.clipboard.writeText(this.plugin.settings.serverUrl + h.uuid);
+                        new Notice("URL copied to clipboard.");
+                    }
+                }
+
+            })
+        }
+
+        loadHistory();
+    }
+
+    onClose() {
+        const { contentEl } = this;
+        contentEl.empty();
     }
 }

@@ -50,7 +50,7 @@ class ConcurrentFetch {
         }
     }
 
-    async fetch(input: RequestInfo | URL, init?: RequestInit | undefined): Promise<TransitResponse> {
+    async fetch(input: RequestInfo | URL, init?: RequestInit | undefined): Promise<Response> {
         return new Promise((resolve, reject) => {
             // const task = async () => {
             //     try {
@@ -81,14 +81,14 @@ class ConcurrentFetch {
             const task = async () => {
                 try {
                     const response = await fetch(input, init);
-                    resolve(response);
                     if (response.ok) {
                         resolve(response);
                     } else {
                         reject(response)
                     }
                 } catch (error) {
-                    reject(error);
+                    new Notice(error.stack)
+                    // reject(error);
                 }
             };
 
@@ -105,12 +105,14 @@ export const setRequestConcurrentNum = (concurrentNum: number) => {
     concurrentFetch = new ConcurrentFetch(concurrentNum);
 }
 
-export async function request(input: RequestInfo | URL, init?: RequestInit | undefined) {
+export async function request(input: RequestInfo | URL, init?: RequestInit | undefined, silence?: boolean) {
     return concurrentFetch.fetch(input, init).catch(async (response: Response | Error) => {
-        if (response instanceof Error) {
-            new Notice(response.message);
-        } else {
-            new Notice(await response.text());
+        if (!silence) {
+            if (response instanceof Error) {
+                new Notice(response.message);
+            } else {
+                new Notice(await response.text());
+            }
         }
         return Promise.reject(response);
     });
