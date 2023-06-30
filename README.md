@@ -8,6 +8,19 @@
 - **Publish and Share**: Easily publish and share selected notes to your private service. Share your knowledge with others or collaborate with teammates.
 - **Privacy and Control**: Keep your notes secure and private. Your data is stored in your own self-hosted service, giving you full control over your information.
 
+
+## Screenshots
+
+### Configuration
+![Configuration](screenshots/Configuration.png)
+
+### Sync and History
+![SyncAndHistory](screenshots/SyncAndHistory.gif)
+
+### Share
+![Share](screenshots/Share.gif)
+
+
 ## Getting Started
 
 1. Install the **Notes Sync Share** plugin in your Obsidian app.
@@ -89,22 +102,44 @@ docker rm obsidian-sync-share-server
 docker logs obsidian-sync-share-server
 ```
 
+
 ### Source Code Deployment
 please visit the [obsidian-sync-share-web](https://github.com/Alt-er/obsidian-sync-share-web). 
 
 please visit the [obsidian-sync-share-server](https://github.com/Alt-er/obsidian-sync-share-server). 
 
 
-## Screenshots
+### Sync to Remote Git
 
-![xx](screenshots/02d372cc638a2d8ca4f4da5a69252df8.png)
+#### Configuration
+Please go to the plugin configuration page and configure the following configuration.
 
-![xx](screenshots/78dcf10f1947be9b6fc2ad37b25cdc36.png)
+Note: Force push is used every time you sync
 
-![xx](screenshots/60539da53b0384a830ff5ba649cf4e60.png)
+- Remote Git repository address
+- Username and AccessToken
+
+#### Obtaining GitHub Access Token
+- Open the GitHub website and log in to your account.
+- Click on your profile picture in the top right corner and select "Settings".
+- In the left sidebar, choose "Developer settings".
+- In the left sidebar, select "Personal access tokens".
+- Click on "Generate new token".
+- Enter a descriptive name in the "Note" field to remember the purpose of this access token.
+- Select the desired permissions from the list (e.g., read repository, write repository, etc.).
+- Click "Generate token" at the bottom of the page.
+- Copy the generated access token.
 
 
+#### Obtaining GitLab Access Token
 
+- Open the GitLab website and log in to your account.
+- Click on your profile picture in the top right corner and select "Settings".
+- In the left sidebar, choose "Access Tokens".
+- Enter a descriptive name in the "Name" field to remember the purpose of this access token.
+- In the "Scopes" section, select the desired permissions (e.g., API, repositories, etc.).
+- Click "Create personal access token" at the bottom of the page.
+- Copy the generated access token.
 
 
 ## Feedback and Contributions
