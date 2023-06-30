@@ -93,8 +93,10 @@ export default class SettingTab extends PluginSettingTab {
 
         containerEl.empty();
 
-        containerEl.createEl('h1', { text: 'Notes Sync Share' });
-        containerEl.createEl('h2', { text: 'Basic Settings' });
+        // containerEl.createEl('h1', { text: 'Notes Sync Share' });
+        // containerEl.createEl('h2', { text: 'Basic Settings' });
+
+
         new Setting(containerEl)
             .setName('Server')
             .setDesc('It\'s a URL, enter your http service address')
