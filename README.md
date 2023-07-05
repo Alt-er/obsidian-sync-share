@@ -8,6 +8,8 @@
 - **Publish and Share**: Easily publish and share selected notes to your private service. Share your knowledge with others or collaborate with teammates.
 - **Privacy and Control**: Keep your notes secure and private. Your data is stored in your own self-hosted service, giving you full control over your information.
 
+Note: Sync and share functions can be used independently, you can use only one of them, for example: just use the share function, and sync function using other obsidian plug-ins to complete is possible.
+
 
 ## Screenshots
 
