@@ -78,10 +78,10 @@ export default class NoteSyncSharePlugin extends Plugin {
 		this.listenDeleteEvent = false;
 		if (file instanceof TFolder) {
 			await this.app.vault.delete(file, true);
-			console.log('delete folder', file)
+			// console.log('delete folder', file)
 		} else {
 			await this.app.vault.delete(file);
-			console.log('delete file', file)
+			// console.log('delete file', file)
 		}
 		this.listenDeleteEvent = true;
 	}
@@ -119,7 +119,7 @@ export default class NoteSyncSharePlugin extends Plugin {
 				})
 			}).then(res => res.text()).then(token => {
 				if (token) {
-					console.log("token:", token)
+					// console.log("token:", token)
 					this.settings.token = token;
 					this.saveSettings();
 					new Notice("Login successful. ")
@@ -171,7 +171,7 @@ export default class NoteSyncSharePlugin extends Plugin {
 					}
 				}
 
-				console.log('sync delete history successfully:', data);
+				// console.log('sync delete history successfully:', data);
 			})
 
 
@@ -205,7 +205,7 @@ export default class NoteSyncSharePlugin extends Plugin {
 				})
 					.then(response => response.text())
 					.then(data => {
-						console.log('uploaded successfully:', data);
+						// console.log('uploaded successfully:', data);
 					})
 
 			}
@@ -249,7 +249,7 @@ export default class NoteSyncSharePlugin extends Plugin {
 								this.app.vault.modifyBinary(file, buffer, { mtime: parseInt(mtime) });
 							} else if (file instanceof TFolder) {
 								// 下载的时候如果发现本应该是文件的变成了文件夹
-								console.warn("发现同名文件和文件夹")
+								console.warn("Discovery of files and folders with the same name");
 								if (file.children.length == 0) {
 									await this.deleteFileOrFolder(file);
 									await this.app.vault.createBinary(f, buffer, { mtime: parseInt(mtime) })
@@ -275,7 +275,7 @@ export default class NoteSyncSharePlugin extends Plugin {
 		}).then(response => response.text())
 			.then(data => {
 				new Notice("Synchronized notes completed");
-				console.log('unlock: ', data);
+				// console.log('unlock: ', data);
 			})
 
 	}
@@ -357,13 +357,13 @@ export default class NoteSyncSharePlugin extends Plugin {
 
 		this.app.vault.on("delete", async (fileOrFolder) => {
 			if (this.listenDeleteEvent) {
-				console.log("delete", fileOrFolder)
+				// console.log("delete", fileOrFolder)
 				this.db.setItem(fileOrFolder.path, Date.now());
 			}
 		})
 
 		this.app.vault.on("rename", async (fileOrFolder, oldPath) => {
-			console.log("rename", fileOrFolder, oldPath)
+			// console.log("rename", fileOrFolder, oldPath)
 			this.db.setItem(oldPath, Date.now());
 		})
 
@@ -383,7 +383,7 @@ export default class NoteSyncSharePlugin extends Plugin {
 			try {
 				await this.syncNotes();
 			} catch (e) {
-				console.log(e);
+				console.error(e);
 			}
 			if (Date.now() - start < 1000) {
 				setTimeout(() => { setIcon(ribbonIconEl, "refresh-ccw") }, 1000)

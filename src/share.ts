@@ -23,7 +23,7 @@ export const shareNotes = async (plugin: NoteSyncSharePlugin, file: TFile, expir
         const embeddedFiles: TFile[] = [];
         await findLinkedFiles(file, embeddedFiles);
 
-        console.info("embeddedFiles", embeddedFiles);
+        // console.info("embeddedFiles", embeddedFiles);
 
         await Promise.all(embeddedFiles.map(async file => {
             const fileData = await plugin.app.vault.readBinary(file);
