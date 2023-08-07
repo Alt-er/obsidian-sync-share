@@ -1,3 +1,4 @@
+[切换用户](/README-zh_CN.md)
 # Notes Sync Share
 
 **Notes Sync Share** is an Obsidian plugin that allows you to synchronize and share (publish) your notes to your own private service. With this plugin, you can easily sync your Obsidian notes to a self-hosted service and have full control over your data.
@@ -93,6 +94,7 @@ or
 https://{your server ip}
 
 #### Delete or rebuild
+
 ```shell
 docker stop obsidian-sync-share-server
 docker rm obsidian-sync-share-server
