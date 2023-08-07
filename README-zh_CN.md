@@ -1,6 +1,6 @@
-# 笔记同步分享
+# Notes Sync Share
 
-**笔记同步分享** 是一个 Obsidian 插件，允许你将笔记同步和分享（发布）到你自己的私有服务。通过这个插件，你可以轻松地将 Obsidian 笔记同步到自托管的服务，并完全掌控你的数据。
+**Notes Sync Share** 是一个 Obsidian 插件，允许你将笔记同步和分享（发布）到你自己的私有服务。通过这个插件，你可以轻松地将 Obsidian 笔记同步到自托管的服务，并完全掌控你的数据。
 
 ## 特点
 
@@ -26,7 +26,7 @@
 
 ## 入门指南
 
-1. 在你的 Obsidian 应用中安装 **笔记同步分享** 插件。
+1. 在你的 Obsidian 应用中安装 **Notes Sync Share** 插件。
 2. 部署后端服务。
 3. 使用你的私有服务的 URL 和凭证配置插件设置。
 4. 选择你想要同步或发布的笔记。
@@ -148,7 +148,7 @@ docker logs obsidian-sync-share-server
 
 ## 反馈与贡献
 
-如果你遇到任何问题，有建议，或想为 **笔记同步分享** 的开发做出贡献，请访问 [GitHub 仓库](https://github.com/Alt-er/obsidian-sync-share)。非常感谢你的反馈和贡献。
+如果你遇到任何问题，有建议，或想为 **Notes Sync Share** 的开发做出贡献，请访问 [GitHub 仓库](https://github.com/Alt-er/obsidian-sync-share)。非常感谢你的反馈和贡献。
 
 ## 许可证
 
@@ -156,4 +156,4 @@ docker logs obsidian-sync-share-server
 
 ---
 
-**笔记同步分享** 与 Obsidian 或 Obsidian 团队无关，它是由 Alt-er 开发的独立插件。
+**Notes Sync Share** 与 Obsidian 或 Obsidian 团队无关，它是由 Alt-er 开发的独立插件。
