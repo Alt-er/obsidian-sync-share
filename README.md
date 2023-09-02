@@ -83,6 +83,14 @@ This command allows you to specify additional parameters for configuring the ser
 
 `-e JAVA_OPTS=-Xmx512m  ` limit memory
 
+
+Modify the default branch name of git, which is master by default, The following example sets the default branch name to main
+```shell
+echo "[init] \n    defaultBranch = main" > ~/gitconfig_temp
+
+docker cp ~/gitconfig_temp obsidian-sync-share-server:~/.gitconfig
+```
+
 #### Try to access
 
 Use your server ip or domain name to access your service, the port is the listening port configured in docker earlier

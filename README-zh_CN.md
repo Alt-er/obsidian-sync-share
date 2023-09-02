@@ -84,6 +84,13 @@ alterzz/obsidian-sync-share-server
 
 `-e JAVA_OPTS=-Xmx512m` 限制内存
 
+
+修改git默认分支名称，默认为master, 以下示例将默认分支名称设置为 main
+```shell
+echo "[init] \n    defaultBranch = main" > ~/gitconfig_temp
+
+docker cp ~/gitconfig_temp obsidian-sync-share-server:~/.gitconfig
+```
 #### 尝试访问
 
 使用你的服务器 IP 地址或域名来访问你的服务，端口是之前在 Docker 中配置的监听端口。
