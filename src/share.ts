@@ -3,7 +3,7 @@ import { request } from "src/request";
 import * as path from 'path-browserify'
 import NoteSyncSharePlugin from "./main";
 
-export const shareNotes = async (plugin: NoteSyncSharePlugin, file: TFile, expirationDate: number) => {
+export const shareNotes = async (plugin: NoteSyncSharePlugin, file: TFile, expirationDate: number, link: string | null, headerPosition: string) => {
 
     const { username, token } = plugin.settings;
     const serverUrl = plugin.getServerUrl();
@@ -14,6 +14,11 @@ export const shareNotes = async (plugin: NoteSyncSharePlugin, file: TFile, expir
         formData.append('mainPath', file.path);
         formData.append('title', title);
         formData.append('expirationDate', expirationDate + "");
+        if (link) {
+            const linkId = link.split("?")[0].split("/").pop() as string;
+            formData.append('shareLinkId', linkId);
+        }
+        formData.append('headerPosition', headerPosition);
 
         const fileData = await plugin.app.vault.readBinary(file);
         formData.append(file.path, new Blob([fileData]), file.name);
@@ -160,6 +165,7 @@ export class ShareModal extends Modal {
     file: TFile;
     expirationType: "Unset" | "Minutes" | "Hours" | "Days"
     expirationValue: number
+    headerPosition: 'static' | 'sticky' = 'static'
 
     constructor(app: App, plugin: NoteSyncSharePlugin, file: TFile) {
         super(app);
@@ -180,7 +186,7 @@ export class ShareModal extends Modal {
     }
 
     async deleteShareHistory(shareLink: string) {
-        return await request(`${this.plugin.getServerUrl()}/share/delete?shareLinkId=${shareLink.split("/").pop()}`, {
+        return await request(`${this.plugin.getServerUrl()}/share/delete?shareLinkId=${shareLink.split("?")[0].split("/").pop()}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -199,7 +205,6 @@ export class ShareModal extends Modal {
         title.addClass("modal_title_warpper")
 
         new Setting(contentEl)
-
             .setName('Expiration date')
             .setDesc('Set an expiration date, after which the notes will be blocked from access')
             .addDropdown(dropdown =>
@@ -229,7 +234,22 @@ export class ShareModal extends Modal {
                     this.expirationValue = parseInt(num);
                 }))
 
-            .addButton(button =>
+        new Setting(contentEl)
+            .setName('Header position')
+            .setDesc('Setting a fixed pattern for the header of the sharing page')
+            .addDropdown(dropdown =>
+                dropdown.addOption("static", "Default")
+                    .addOption("sticky", "Sticky")
+                    .setValue(this.headerPosition)
+                    .onChange(async val => {
+                        this.headerPosition = val as any;
+                    })
+            )
+
+
+        new Setting(contentEl)
+            .addButton(button => {
+                button.buttonEl.style.width = "100%"
                 button.setButtonText("Share & Copy")
                     .onClick(async e => {
                         // 计算过期时间 默认0 未设置
@@ -241,11 +261,12 @@ export class ShareModal extends Modal {
                         } else if (this.expirationType === "Days" && this.expirationValue > 0) {
                             expirationDate = Date.now() + (1000 * 60 * 60 * 24 * this.expirationValue);
                         }
-                        await shareNotes(this.plugin, this.file, expirationDate);
+                        await shareNotes(this.plugin, this.file, expirationDate, null, this.headerPosition);
                         loadHistory();
                     })
-            )
+            })
 
+        new Setting(contentEl)
         const div = contentEl.createDiv();
         div.addClass("modal_content_warpper")
         // 添加列表内容
@@ -259,6 +280,30 @@ export class ShareModal extends Modal {
             shareHistory.forEach(h => {
                 const listItem = listEl.createEl('li');
                 listItem.addClass("share_history_record_warpper");
+
+                const replace = getIcon("replace");
+                if (replace) {
+                    const span = listItem.createSpan();
+                    span.appendChild(replace);
+                    span.setAttribute("title", "Overwrite the latest note content into this link")
+                    replace.onclick = async () => {
+                        await this.deleteShareHistory(h.uuid);
+                        // 计算过期时间 默认0 未设置
+                        let expirationDate = 0;
+                        if (this.expirationType === "Minutes" && this.expirationValue > 0) {
+                            expirationDate = Date.now() + (1000 * 60 * this.expirationValue)
+                        } else if (this.expirationType === "Hours" && this.expirationValue > 0) {
+                            expirationDate = Date.now() + (1000 * 60 * 60 * this.expirationValue)
+                        } else if (this.expirationType === "Days" && this.expirationValue > 0) {
+                            expirationDate = Date.now() + (1000 * 60 * 60 * 24 * this.expirationValue);
+                        }
+                        await shareNotes(this.plugin, this.file, expirationDate, h.uuid, this.headerPosition);
+                        //shareLink.split("?")[0].split("/").pop()
+                        loadHistory();
+                        new Notice("Completion of overwriting note content");
+                    }
+                }
+
                 const a = listItem.createEl("a");
                 a.textContent = `Expiration Date: ${h.expirationDate}`;
                 a.href = this.plugin.settings.serverUrl + h.uuid;
@@ -267,11 +312,15 @@ export class ShareModal extends Modal {
                     new Notice("URL copied to clipboard.");
                 }
 
+
+
                 const trash = getIcon("trash-2");
                 const copy = getIcon("copy");
 
                 if (trash) {
-                    listItem.appendChild(trash);
+                    const span = listItem.createSpan();
+                    span.appendChild(trash);
+                    span.setAttribute("title", "Delete this sharing record")
                     trash.onclick = async () => {
                         await this.deleteShareHistory(h.uuid);
                         loadHistory();
@@ -280,7 +329,9 @@ export class ShareModal extends Modal {
                 }
 
                 if (copy) {
-                    listItem.appendChild(copy);
+                    const span = listItem.createSpan();
+                    span.appendChild(copy);
+                    span.setAttribute("title", "Copy the link to this shared record")
                     copy.onclick = () => {
                         navigator.clipboard.writeText(this.plugin.settings.serverUrl + h.uuid);
                         new Notice("URL copied to clipboard.");
