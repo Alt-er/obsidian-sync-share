@@ -25,7 +25,7 @@ export interface NoteSyncSharePluginSettings {
 }
 
 const DEFAULT_SETTINGS: NoteSyncSharePluginSettings = {
-	serverUrl: "https://share.alter.run",
+	serverUrl: "https://share.your_service.com",
 	username: "",
 	password: "",
 	token: "",
