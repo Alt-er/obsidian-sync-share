@@ -61,5 +61,9 @@ If your plugin does not need CSS, delete this file.
   cursor: pointer;
 }
  
+.is-mobile .flex-setting-item .setting-item-control{
+   display: flex;
+   flex-direction: column;
+}
  
   

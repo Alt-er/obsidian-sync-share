@@ -119,7 +119,7 @@ export default class SettingTab extends PluginSettingTab {
             }).setClass("setting_equal_width_warpper")
 
         new Setting(containerEl)
-
+            .setClass("flex-setting-item")
             .setName('User')
             .setDesc('Please enter your username and password, if it does not exist, it will be created automatically.')
             .addText(text => text
