@@ -182,6 +182,7 @@ export default class SettingTab extends PluginSettingTab {
                     })
             )
 
+
         // -----------------git config ---------------------
 
 
