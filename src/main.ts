@@ -17,6 +17,7 @@ export interface NoteSyncSharePluginSettings {
 	vaultId: number;
 	autoRunInterval: number;
 	parallelism: number;
+	showNotifications: boolean;
 	syncToLocalGit: boolean;
 	maximumCommitFileSize: number;
 	remoteGitAddress: string;
@@ -32,6 +33,7 @@ const DEFAULT_SETTINGS: NoteSyncSharePluginSettings = {
 	vaultId: 0,
 	autoRunInterval: -1,
 	parallelism: 10,
+	showNotifications: true,
 	syncToLocalGit: false,
 	maximumCommitFileSize: 1,
 	remoteGitAddress: "",
@@ -274,15 +276,21 @@ export default class NoteSyncSharePlugin extends Plugin {
 			},
 		}).then(response => response.text())
 			.then(data => {
-				new Notice("Synchronized notes completed");
+				this.showNotificationIfNeeded("Synchronized notes completed")
 				// console.log('unlock: ', data);
 			})
 
 	}
 
-	async syncNotes() {
 
-		new Notice("Start syncing notes");
+	showNotificationIfNeeded(message: string) {
+		if (this.settings.showNotifications) {
+			new Notice(message);
+		}
+	}
+
+	async syncNotes() {
+		this.showNotificationIfNeeded("Start syncing notes")
 
 		const files = this.app.vault.getAllLoadedFiles();
 

@@ -183,6 +183,17 @@ export default class SettingTab extends PluginSettingTab {
             )
 
 
+
+        new Setting(containerEl).setName("Show Notifications")
+            .setDesc("When enabled, the plugin displays notifications on each successful sync to provide feedback. If you don't want to be disturbed by these notifications, you can turn this switch off.")
+            .addToggle(toggle => toggle
+                .setValue(this.plugin.settings.showNotifications)
+                .onChange(async v => {
+                    this.plugin.settings.showNotifications = v;
+                    await this.plugin.saveSettings();
+                })
+            );
+
         // -----------------git config ---------------------
 
 
