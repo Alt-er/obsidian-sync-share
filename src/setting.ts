@@ -194,6 +194,18 @@ export default class SettingTab extends PluginSettingTab {
                 })
             );
 
+
+        new Setting(containerEl).setName("Sync config directory")
+            .setDesc("When turned on, the configuration directory (.obsidian) will be synchronized, and hidden files and node_modules directories will be skipped. This feature may cause unexpected problems, for example: the plug-in data of each device will be exactly the same, and some plug-ins may not want this to happen. Some plug-in data may need to be restarted after obsidian is synchronized to take effect. Please use it as needed!")
+            .addToggle(toggle => toggle
+                .setValue(this.plugin.settings.syncConfigDir)
+                .onChange(async v => {
+                    this.plugin.settings.syncConfigDir = v;
+                    await this.plugin.saveSettings();
+                    this.plugin.registerObsidianConfigDirListen()
+                })
+            );
+
         // -----------------git config ---------------------
 
 
