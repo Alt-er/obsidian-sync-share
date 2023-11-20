@@ -313,74 +313,79 @@ export default class NoteSyncSharePlugin extends Plugin {
 					const buffer = await response.arrayBuffer();
 					await enqueueTask(async () => {
 						const isDir = response.headers.get("isDir");
-						// 新增判断是否是配置目录
-						if (f.startsWith(this.obsidianConfigDirRename)) {
-							const pathArr = f.split("/");
-							pathArr[0] = this.app.vault.configDir;
-							const originalPath = pathArr.join("/");
+						try {
+							// 新增判断是否是配置目录
+							if (f.startsWith(this.obsidianConfigDirRename)) {
+								const pathArr = f.split("/");
+								pathArr[0] = this.app.vault.configDir;
+								const originalPath = pathArr.join("/");
+								if (isDir === "true") {
+									const exists = await this.app.vault.adapter.exists(originalPath);
+									if (!exists) {
+										await this.app.vault.adapter.mkdir(originalPath)
+									}
+								} else {
+									const stat = await this.app.vault.adapter.stat(originalPath)
+									const mtime = response.headers.get("mtime") || "0";
+									if (!stat) {
+										const arr = originalPath.split("/");
+										const parentDir = arr.slice(0, arr.length - 1).join("/");
+										const parentDirExists = await this.app.vault.adapter.exists(parentDir);
+										if (parentDir && !parentDirExists) {
+											await this.app.vault.adapter.mkdir(parentDir)
+										}
+										await this.app.vault.adapter.writeBinary(originalPath, buffer, { mtime: parseInt(mtime) })
+
+									} else if (stat.type === "file") {
+										await this.app.vault.adapter.writeBinary(originalPath, buffer, { mtime: parseInt(mtime) });
+									} else if (stat.type === "folder") {
+										// 下载的时候如果发现本应该是文件的变成了文件夹
+										console.warn("Discovery of files and folders with the same name");
+										const list = await this.app.vault.adapter.list(originalPath)
+										if (list.files.length == 0 && list.folders.length == 0) {
+											await this.app.vault.adapter.rmdir(originalPath, true)
+											await this.app.vault.adapter.writeBinary(originalPath, buffer, { mtime: parseInt(mtime) })
+										}
+									}
+								}
+								return;
+							}
+
+							// 后面都是普通文件的处理
 							if (isDir === "true") {
-								const exists = await this.app.vault.adapter.exists(originalPath);
-								if (!exists) {
-									await this.app.vault.adapter.mkdir(originalPath)
+								const file = this.app.vault.getAbstractFileByPath(f);
+								if (!file) {
+									await this.app.vault.createFolder(f);
 								}
 							} else {
-								const stat = await this.app.vault.adapter.stat(originalPath)
+								const file = this.app.vault.getAbstractFileByPath(f);
 								const mtime = response.headers.get("mtime") || "0";
-								if (!stat) {
-									const arr = originalPath.split("/");
+								if (!file) {
+									const arr = f.split("/");
 									const parentDir = arr.slice(0, arr.length - 1).join("/");
-									const parentDirExists = await this.app.vault.adapter.exists(parentDir);
-									if (parentDir && !parentDirExists) {
-										await this.app.vault.adapter.mkdir(parentDir)
+									if (parentDir && !this.app.vault.getAbstractFileByPath(parentDir)) {
+										await this.app.vault.createFolder(parentDir);
 									}
-									await this.app.vault.adapter.writeBinary(originalPath, buffer, { mtime: parseInt(mtime) })
+									await this.app.vault.createBinary(f, buffer, { mtime: parseInt(mtime) })
 
-								} else if (stat.type === "file") {
-									await this.app.vault.adapter.writeBinary(originalPath, buffer, { mtime: parseInt(mtime) });
-								} else if (stat.type === "folder") {
+								} else if (file instanceof TFile) {
+									await this.app.vault.modifyBinary(file, buffer, { mtime: parseInt(mtime) });
+								} else if (file instanceof TFolder) {
 									// 下载的时候如果发现本应该是文件的变成了文件夹
 									console.warn("Discovery of files and folders with the same name");
-									const list = await this.app.vault.adapter.list(originalPath)
-									if (list.files.length == 0 && list.folders.length == 0) {
-										await this.app.vault.adapter.rmdir(originalPath, true)
-										await this.app.vault.adapter.writeBinary(originalPath, buffer, { mtime: parseInt(mtime) })
+									if (file.children.length == 0) {
+										await this.deleteFileOrFolder(file);
+										await this.app.vault.createBinary(f, buffer, { mtime: parseInt(mtime) })
 									}
+									// this.app.vault.modifyBinary(file, await response.arrayBuffer(), { mtime: parseInt(mtime) });
 								}
 							}
-							return;
-						}
-
-						// 后面都是普通文件的处理
-						if (isDir === "true") {
-							const file = this.app.vault.getAbstractFileByPath(f);
-							if (!file) {
-								await this.app.vault.createFolder(f);
-							}
-						} else {
-							const file = this.app.vault.getAbstractFileByPath(f);
-							const mtime = response.headers.get("mtime") || "0";
-							if (!file) {
-								const arr = f.split("/");
-								const parentDir = arr.slice(0, arr.length - 1).join("/");
-								if (parentDir && !this.app.vault.getAbstractFileByPath(parentDir)) {
-									await this.app.vault.createFolder(parentDir);
-								}
-								await this.app.vault.createBinary(f, buffer, { mtime: parseInt(mtime) })
-
-							} else if (file instanceof TFile) {
-								await this.app.vault.modifyBinary(file, buffer, { mtime: parseInt(mtime) });
-							} else if (file instanceof TFolder) {
-								// 下载的时候如果发现本应该是文件的变成了文件夹
-								console.warn("Discovery of files and folders with the same name");
-								if (file.children.length == 0) {
-									await this.deleteFileOrFolder(file);
-									await this.app.vault.createBinary(f, buffer, { mtime: parseInt(mtime) })
-								}
-								// this.app.vault.modifyBinary(file, await response.arrayBuffer(), { mtime: parseInt(mtime) });
-							}
+						} catch (error) {
+							new Notice(`downloadFile error => path:${f} isDir:${isDir}`)
+							console.error(error)
+							console.error(`downloadFile error => path:${f} isDir:${isDir} isObsidianConfigFile:${f.startsWith(this.obsidianConfigDirRename)} `)
 						}
 					})
-
 				})
 		})
 
@@ -598,6 +603,12 @@ export default class NoteSyncSharePlugin extends Plugin {
 			this.db.setItem(oldPath, Date.now());
 		})
 
+		this.app.vault.on("create", async (file) => {
+			if (file instanceof TFile) {
+				const arrayBuffer = await this.app.vault.adapter.readBinary(file.path)
+				this.app.vault.modifyBinary(file, arrayBuffer, { ctime: Date.now() })
+			}
+		})
 
 		// This creates an icon in the left ribbon.
 		// refresh-ccw  rotate-ccw
