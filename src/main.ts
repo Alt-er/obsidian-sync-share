@@ -604,14 +604,15 @@ export default class NoteSyncSharePlugin extends Plugin {
 		})
 
 		// 这里一定要延迟执行, 因为create会在obsidian启动时每个文件都触发一次
-		setTimeout(() => {
-			this.app.vault.on("create", async (file) => {
-				if (file instanceof TFile) {
-					const arrayBuffer = await this.app.vault.adapter.readBinary(file.path)
-					this.app.vault.modifyBinary(file, arrayBuffer, { ctime: Date.now() })
-				}
-			})
-		}, 3500)
+		// 暂时去掉这个功能
+		// setTimeout(() => {
+		// 	this.app.vault.on("create", async (file) => {
+		// 		if (file instanceof TFile) {
+		// 			const arrayBuffer = await this.app.vault.adapter.readBinary(file.path)
+		// 			this.app.vault.modifyBinary(file, arrayBuffer, { ctime: Date.now() })
+		// 		}
+		// 	})
+		// }, 3500)
 
 
 		// This creates an icon in the left ribbon.
