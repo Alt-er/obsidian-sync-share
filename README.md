@@ -81,15 +81,28 @@ This command allows you to specify additional parameters for configuring the ser
   
 #### Other configurations
 
-`-e JAVA_OPTS=-Xmx512m  ` limit memory
+limit memory
 
+`-e JAVA_OPTS=-Xmx512m  ` 
 
 Modify the default branch name of git, which is master by default, The following example sets the default branch name to main
+
 ```shell
 echo "[init] \n    defaultBranch = main" > ~/gitconfig_temp
 
 docker cp ~/gitconfig_temp obsidian-sync-share-server:~/.gitconfig
 ```
+
+Disable or allow automatic registration operations
+
+```
+# Creating a file named `registration_lock` and placing it in the same directory as the program will disable automatic registration.
+docker exec obsidian-sync-share-server touch /app/registration_lock
+
+# Deleting this file will allow automatic registration
+docker exec obsidian-sync-share-server rm /app/registration_lock
+```
+
 
 #### Try to access
 
