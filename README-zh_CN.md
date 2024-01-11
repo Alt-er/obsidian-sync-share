@@ -166,6 +166,19 @@ docker logs obsidian-sync-share-server
 - 在页面底部点击 "Create personal access token"。
 - 复制生成的访问令牌。
 
+## 常见问题 (FAQ)
+
+### 1. 同步时卡住并提示: "Other clients are in the process of synchronization, please try later"
+
+Q：删除文件：`/app/user_store/{username}/sync_lock`可以手动解锁。以上是docker部署的路径。如果是手动部署，请在您手动指定的目录中搜索该文件。
+
+如果解锁后再次出现该问题，则说明您的同步过程出现问题。 常见的情况是，使用反向代理（nginx）时，上传的文件大小超出了使用默认配置时的限制。 还可能存在其他问题，可以使用 `docker log obsidian-sync-share-server` 查看错误堆栈。 如果方便的话可以发给我，我会具体分析问题。
+
+### 2. 链接被当做文本无法跳转
+
+Q: 不要使用 wikilinks
+
+![Don't use wikilinks](screenshots/Dont_use_wikilinks.png)
 ## 反馈与贡献
 
 如果你遇到任何问题，有建议，或想为 **Notes Sync Share** 的开发做出贡献，请访问 [GitHub 仓库](https://github.com/Alt-er/obsidian-sync-share)。非常感谢你的反馈和贡献。

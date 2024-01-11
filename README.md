@@ -166,6 +166,20 @@ Note: Force push is used every time you sync
 - Click "Create personal access token" at the bottom of the page.
 - Copy the generated access token.
 
+## Frequently Asked Questions (FAQ)
+
+### 1. Stuck on "Other clients are in the process of synchronization, please try later"
+
+Q: Delete files: /app/user_store/{username}/sync_lock can be unlocked manually.
+The above is the path for docker deployment. If it is deployed manually, please search for the file in the directory you specified manually.
+
+If the problem occurs again after unlocking, it means there is a problem in your synchronization process. A common situation is that when using a reverse proxy (nginx), the uploaded file size exceeds the limit when using the default configuration. There may also be other problems, you can use docker logs obsidian-sync-share-server to view the error stack. If it is convenient, you can send it to me and I will analyze the specific problem.
+
+### 2. Links are treated as text and cannot be jumped
+
+Q: Don't use wikilinks
+
+![Don't use wikilinks](screenshots/Dont_use_wikilinks.png)
 
 ## Feedback and Contributions
 
